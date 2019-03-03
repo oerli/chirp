@@ -23,4 +23,4 @@ Does work at the moment *only* in *release* mode and capacitance doesn't seem to
 
 On macOS open the terminal and run the screen command with the microbit serial device
 
-    screen /dev/cu.usbmodem14202 9600
+    screen /dev/cu.usbmodem14202 115200
