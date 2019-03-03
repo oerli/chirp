@@ -9,7 +9,7 @@ use microbit::hal::i2c::I2c;
 use microbit::hal::nrf51::{UART0, GPIOTE};
 use microbit::hal::prelude::*;
 use microbit::hal::serial;
-use microbit::hal::serial::BAUD9600;
+use microbit::hal::serial::BAUD115200;
 use microbit::TWI1;
 use microbit::hal::delay::Delay;
 
@@ -41,7 +41,7 @@ fn main() -> ! {
             let rx = gpio.pin25.into_floating_input().downgrade();
 
             // Set up serial port using the prepared pins
-            let (mut tx, _) = serial::Serial::uart0(p.UART0, tx, rx, BAUD9600).split();
+            let (mut tx, _) = serial::Serial::uart0(p.UART0, tx, rx, BAUD115200).split();
             let _ = write!(&mut tx, "n\rSetting up Chirp Sensor...!\n\r");
 
             // Configure SCL and SDA pins accordingly
@@ -49,29 +49,74 @@ fn main() -> ! {
             let sda = gpio.pin30.into_open_drain_input().downgrade();
 
             // Set up I2C
-            let i2c = i2c::I2c::i2c1(p.TWI1, sda, scl);
+            let mut i2c = i2c::I2c::i2c1(p.TWI1, sda, scl);
 
-            // Set up Chirp Sensor on the I2C bus
-            let mut chirp = Chirp::new(i2c, 0x24);
-
+            let mut chirp = Chirp::new(i2c, chirp::DEFAULT_ADDRESS);
+            
             // Reset the Chirp Sensor to initialize correctly
             chirp.reset();
-            delay.delay_ms(250_u32);
+            delay.delay_ms(100_u32);
 
-            loop {
+            // Change Chirp Sensor address
+            // write!(&mut tx, "Change Address to 0x21");
+            // chirp.address(0x21);
+            // delay.delay_ms(100_u32);
+            
+            let version = match chirp.version() {
+                    Result::Ok(version) => version,
+                    Result::Err(error) => {
+                        write!(&mut tx, "Error: {:?}\n\r", error);
+                        loop {
+                            continue;
+                        };
+                    }
+                };
+            write!(&mut tx, "Version: {}\n\r", version);
+            
+            loop {          
                 // Start messure the sensor so it's ready for reading
                 chirp.messure();
                 delay.delay_ms(1000_u32);
-                let temp = chirp.temperature().ok().unwrap();
-                write!(&mut tx, "Temperature: {}\n\r", temp);
-                delay.delay_ms(1000_u32);
-                let cap = chirp.capacitance().ok().unwrap();
-                write!(&mut tx, "Capacitance: {}\n\r", cap);
-                delay.delay_ms(1000_u32);
-                let light = chirp.light().ok().unwrap();
-                write!(&mut tx, "Light: {}\n\r", light);
-            }            
 
+                // Read Temperature
+                let temperature = match chirp.temperature() {
+                    Result::Ok(temperature) => temperature,
+                    Result::Err(error) => {
+                        write!(&mut tx, "Error: {:?}\n\r", error);
+                        loop {
+                            continue;
+                        };
+                    }
+                };
+                write!(&mut tx, "Temperature: {}\n\r", temperature);
+                delay.delay_ms(1000_u32);
+
+                // Read Capacitance
+                let capacitance = match chirp.capacitance() {
+                    Result::Ok(capacitance) => capacitance,
+                    Result::Err(error) => {
+                        write!(&mut tx, "Error: {:?}\n\r", error);
+                        loop {
+                            continue;
+                        };
+                    }
+                };
+                write!(&mut tx, "Capacitance: {}\n\r", capacitance);
+                delay.delay_ms(1000_u32);
+
+                // Read Light intensity
+                let light = match chirp.light() {
+                    Result::Ok(light) => light,
+                    Result::Err(error) => {
+                        write!(&mut tx, "Error: {:?}\n\r", error);
+                        loop {
+                            continue;
+                        };
+                    }
+                };
+                write!(&mut tx, "Light: {}\n\r", light);
+            }       
+            
         });
     }
 

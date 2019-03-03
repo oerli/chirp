@@ -4,10 +4,8 @@ chirp! moist soil sensor with Rust (WIP)
 This is my first attempt to write a I2C Rust driver for the chirp! the plant watering alarm https://wemakethings.net/chirp/
 
 ## TODO - WIP
-- Address change not yet implemented
 - Capacitance not working yet properly
-- Light value should be positive
-- Check if Address is valid
+- Negative Temperature not tested (negative numbers)
 
 ## Setup Environment
 Get and install the latest ARM tools from https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads
