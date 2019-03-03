@@ -55,7 +55,7 @@ fn main() -> ! {
             
             // Reset the Chirp Sensor to initialize correctly
             chirp.reset();
-            delay.delay_ms(100_u32);
+            delay.delay_ms(300_u32);
 
             // Change Chirp Sensor address
             // write!(&mut tx, "Change Address to 0x21");
